@@ -106,7 +106,7 @@ void postProcessImg(Mat& dilatedImg, vector <vector <Point>> contours, vector <i
 	Mat col;
 	cvtColor(dilatedImg, col, COLOR_GRAY2BGR);
 
-	// #pragma omp parallel for
+	#pragma omp parallel for
 	for (int charCont = 0; charCont < selected_ROI.size(); charCont++)
 	{
 		Mat croppedCharacter = dilatedImg(boundingRect(contours[selected_ROI[charCont]]));
@@ -174,7 +174,7 @@ void processSinglePlate(Mat& croppedPlate)
 
 void processPlatesArray(Mat& frame, Mat& grey, vector <Rect>& plates)
 {
-	// #pragma omp parallel for
+	#pragma omp parallel for
 	for (int i = 0; i < plates.size(); i++)
 	{
 		Mat croppedPlate = grey(plates[i]); // crop single plate from grey image
@@ -207,9 +207,9 @@ int main()
 		Mat frame, grey;
 		vector <Rect> plates;
 
-		// omp_set_num_threads(8);
-		// omp_set_nested(2);
-		// #pragma omp parallel for private (plates, frame, grey)
+		omp_set_num_threads(8);
+		omp_set_nested(2);
+		#pragma omp parallel for private (plates, frame, grey)
 		// for each image in the testing dataset
 		for (int img = 0; img < 10; img++)
 		{
@@ -251,4 +251,4 @@ int main()
 }
 
 // para - 18.1869 seconds
-// serial ~ 60secs
+// serial - 57.0827 seconds
