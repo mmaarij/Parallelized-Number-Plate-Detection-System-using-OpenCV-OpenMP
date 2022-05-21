@@ -30,7 +30,8 @@ string char_to_str(char c)
 }
 
 
-string execSystemCommand(const char* cmd) {
+string execSystemCommand(const char* cmd) 
+{
 	char buffer[128];
 	string result = "";
 	FILE* pipe = _popen(cmd, "r");
@@ -191,12 +192,15 @@ void processPlatesArray(Mat& frame, Mat& grey, vector <Rect>& plates)
 
 
 
-int main()
+void main()
 {
 	float sum = 0.0;
 	
-	for (int it = 0; it < 20; it++)
+	for (int it = 0; it < 1; it++)
 	{
+		streambuf* orig_buf = cout.rdbuf();
+		cout.rdbuf(NULL);
+
 		double start = omp_get_wtime();
 		system("mkdir RecognitionOutput");
 
@@ -208,7 +212,8 @@ int main()
 		vector <Rect> plates;
 
 		omp_set_num_threads(8);
-		omp_set_nested(2);
+		omp_set_dynamic(0);
+		omp_set_nested(4);
 		#pragma omp parallel for private (plates, frame, grey)
 		// for each image in the testing dataset
 		for (int img = 0; img < 10; img++)
@@ -241,14 +246,14 @@ int main()
 
 
 		double end = omp_get_wtime();
-		system("cls");
-		cout << "Execution Time: " << end - start << " seconds" << endl;
+		cout.rdbuf(orig_buf);
+		cout << it << "/20 --> Execution Time: " << end - start << " seconds" << endl;
 		sum += end - start;
 	}
 
-	cout << "--> Avg Execution Time: " << sum/20 << " seconds" << endl;
-	return 0;
+	cout << "--> Avg Execution Time: " << sum/1 << " seconds" << endl;
 }
 
 // para - 18.1869 seconds
 // serial - 57.0827 seconds
+// avg human - 30 seconds
