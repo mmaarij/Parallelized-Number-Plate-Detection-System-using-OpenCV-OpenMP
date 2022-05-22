@@ -194,66 +194,64 @@ void processPlatesArray(Mat& frame, Mat& grey, vector <Rect>& plates)
 
 void main()
 {
-	float sum = 0.0;
+	int numberOfImages = 0;
+
+	cout << "\n Enter Number of Images in Resources > Plates > test directory : ";
+	cin >> numberOfImages;
 	
-	for (int it = 0; it < 1; it++)
+	streambuf* orig_buf = cout.rdbuf();
+	cout.rdbuf(NULL);
+
+	double start = omp_get_wtime();
+	system("mkdir RecognitionOutput");
+
+	// load video file
+	// string path = "Resources/plateVideo2.mp4";
+	// VideoCapture video(path);
+
+	Mat frame, grey;
+	vector <Rect> plates;
+
+
+	omp_set_num_threads(8);
+	omp_set_dynamic(0);
+	omp_set_nested(4);
+	#pragma omp parallel for private (plates, frame, grey)
+	// for each image in the testing dataset
+	for (int img = 0; img < numberOfImages; img++)
 	{
-		streambuf* orig_buf = cout.rdbuf();
-		cout.rdbuf(NULL);
+		CascadeClassifier plateCascade;
+		plateCascade.load("Resources/haarcascade_russian_plate_number.xml");
 
-		double start = omp_get_wtime();
-		system("mkdir RecognitionOutput");
+		if (plateCascade.empty())
+			cout << "Error! Harr Cascade XML File Not Loaded" << endl; // print error if file not loaded
 
-		// load video file
-		// string path = "Resources/plateVideo2.mp4";
-		// VideoCapture video(path);
+		string path = "Resources/Plates/test/plate (" + to_string(img + 1) + ").jpg"; // parse fileName
 
-		Mat frame, grey;
-		vector <Rect> plates;
+		frame = imread(path); // read image
+		medianBlur(frame, frame, 7); // apply blur
+		cvtColor(frame, grey, COLOR_BGR2GRAY); // convert to grayscale
 
-		omp_set_num_threads(8);
-		omp_set_dynamic(0);
-		omp_set_nested(4);
-		#pragma omp parallel for private (plates, frame, grey)
-		// for each image in the testing dataset
-		for (int img = 0; img < 10; img++)
-		{
-			CascadeClassifier plateCascade;
-			plateCascade.load("Resources/haarcascade_russian_plate_number.xml");
+		// run viola-jones plate detection algo
+		// on the current image
+		// all detected plates returned in plates array
+		plateCascade.detectMultiScale(grey, plates, 1.1, 10);
 
-			if (plateCascade.empty())
-				cout << "Error! Harr Cascade XML File Not Loaded" << endl; // print error if file not loaded
+		processPlatesArray(frame, grey, plates);
 
-			string path = "Resources/Plates/test/plate (" + to_string(img + 1) + ").jpg"; // parse fileName
-
-			frame = imread(path); // read image
-			medianBlur(frame, frame, 7); // apply blur
-			cvtColor(frame, grey, COLOR_BGR2GRAY); // convert to grayscale
-
-			// run viola-jones plate detection algo
-			// on the current image
-			// all detected plates returned in plates array
-			plateCascade.detectMultiScale(grey, plates, 1.1, 10);
-
-			processPlatesArray(frame, grey, plates);
-
-			/*imshow("Image", frame);
-			plates.clear();
-			waitKey(0);*/
-			destroyAllWindows();
-		}
-
-
-
-		double end = omp_get_wtime();
-		cout.rdbuf(orig_buf);
-		cout << it << "/20 --> Execution Time: " << end - start << " seconds" << endl;
-		sum += end - start;
+		/*imshow("Image", frame);
+		plates.clear();
+		waitKey(0);*/
+		destroyAllWindows();
 	}
 
-	cout << "--> Avg Execution Time: " << sum/1 << " seconds" << endl;
+
+
+	double end = omp_get_wtime();
+	cout.rdbuf(orig_buf);
+
+	cout  << "Execution Time: " << end - start << " seconds" << endl;
 }
 
 // para - 18.1869 seconds
 // serial - 57.0827 seconds
-// avg human - 30 seconds
