@@ -5,82 +5,122 @@ This project is a Parallelized Number Plate Detection System developed for Windo
 ## Table of Contents
 
 - [Introduction](#introduction)
-- [Dependencies](#dependencies)
-- [Installation](#installation)
-- [Usage](#usage)
-- [How it Works](#how-it-works)
-- [Performance](#performance)
+- [Objectives](#objectives)
+- [Technology Stack](#technology-stack)
+- [Function Definitions](#function-definitions)
+- [Parallelism Decomposition](#parallelism-decomposition)
+- [Program Flow](#program-flow)
+- [Usage Instructions](#usage-instructions)
+- [Results](#results)
 - [Python Neural Network for Character Recognition](#neural-network-for-character-recognition)
 - [License](#license)
 
 ## Introduction
 
-The **Parallelized Number Plate Detection System** is designed to detect and recognize number plates in images. It takes advantage of parallel processing using OpenMP to enhance the detection and recognition process. This system is particularly useful for scenarios where multiple plates need to be processed quickly and efficiently.
+In today's world, image processing and task automation play a crucial role in law enforcement. A number plate detection system can digitalize this process, providing convenience to law enforcement agencies. This system has various applications, from catching over-speeding drivers to tracking criminal vehicle movements. It can also be integrated into dashboard cameras to detect, recognize, and store number plates during traffic incidents.
 
-## Dependencies
+Conventional (serialized) systems may face efficiency challenges when dealing with a large number of vehicles in a single camera frame. Parallelized systems offer the potential for more efficient and faster results. Additionally, character recognition in traditional systems can be computationally expensive, while using a pre-trained neural network can significantly speed up the process.
 
-To build and run this project, you will need the following dependencies:
+## Objectives
 
-- [OpenCV](https://opencv.org/): Open Source Computer Vision Library.
-- [OpenMP](https://www.openmp.org/): The Open Multi-Processing API for parallel programming.
-- [Python](https://www.python.org/downloads/): Python used for neural network based character recognition.
+The objectives of this project are as follows:
 
-## Installation
+1. Implement a C++ system capable of detecting multiple number plates from a video stream.
 
-To get started with this project, follow these steps:
+2. Crop the detected number plates from the video frame and individually process them to detect characters.
 
-1. Clone this repository to your local machine:
+3. Recognize the characters in the image by employing a recognition engine based on a Neural Net.
 
-   ```bash
-   git clone https://github.com/mmaarij/Parallelized-Number-Plate-Detection-System-using-OpenCV-OpenMP.git
-   ```
+4. Output a corresponding string of characters representing the recognized number plate.
 
-2. Open the project in Visual Studio.
+5. Store the image and the recognized plate number for future use.
 
-3. Set up OpenCV and OpenMP dependencies according to your environment and project settings.
-4. Install Python
+To ensure the program runs efficiently and provides significant speedups compared to traditional systems, OpenCV is used for image processing, and OpenMP is used to parallelize the entire process.
 
-5. Build and run the project.
+## Technology Stack
 
-## Usage
+- C++ (Visual Studio)
+- OpenMP library for parallelization
+- OpenCV library for image processing
+- Python (Used to create and train the Neural Net, and invoked to recognize characters using the pre-trained Neural Net)
 
-1. After building the project, run the executable.
+## Function Definitions
 
-2. The program will prompt you to enter the number of images in the "Resources > Plates > test" directory.
+| Function Name               | Use                                                       |
+| --------------------------- | --------------------------------------------------------- |
+| void main()                 | - Load images using a for loop - Load Harr-Cascade Number-Plate Classifier. - Apply Median Blur to image - Convert to Grayscale - Use Viola-Jones Cascade Method (built into OpenCV) to detect all plates within the current frame - Call processPlatesArray() function |
+| void processPlatesArray(Mat& frame, Mat& grey, vector <Rect>& plates) | - Process all plates in an image using a for loop - For each plate, call processSinglePlate() function |
+| void processSinglePlate(Mat& croppedPlate) | - Preprocess cropped plate: - Apply Binary Thresholding - Apply Median Blur - Erode the lines in the image - Dilate the lines in the image - Apply Inverse Binary Thresholding - Apply Canny Edge Detection - Use the built-in OpenCV findContours() function to find all contours in the image - Call sortContours() function - Process all contours in the image using a for loop - For each contour: - Select a bounding rectangle around the contour as the region of interest (ROI) - If the ROI meets acceptable parameters and does not overlap with the previous ROI, add the contour to the selected ROI list - Call postProcessImg() function |
+| void postProcessImg(Mat& dilatedImg, vector <vector <Point>> contours, vector <int> selected_ROI) | - Convert a copy of the image from grayscale to RGB - For each character/contour: - Crop the character out of the grayscale image - Call recognizeCharacter() function on the cropped character and get the return value - Add the recognized character to the output string (recognized license plate number) - Draw a bounding rectangle around the character on the colored image copy - Label the character with recognized text on the colored image copy - Save the processed image in the output directory with the filename set to the output string |
+| string recognizeCharacter(Mat& croppedCharacter) | - Preprocess cropped character: - Dilate lines - Add a padded border - Resize the image to 28x28 pixels - Parse a python command as a string to be run as a system command in the form "python neuralnet.py p1 p2 p3 … p784" where pN denotes pixel values to be passed as arguments to the python script - Call execSystemCommand() function with the parsed command as a parameter to run the python script and send the cropped character image to the neural net for recognition - Return the recognized character obtained as output from the neural net |
+| void sortContours(vector <vector <Point>>& contours) | - Sort contours based on x coordinates from left to right using insertion sort |
+| string execSystemCommand(const char* cmd) | - Create a pipe - Execute a system command and store output
 
-3. The system will process the images, detecting and recognizing number plates.
+ in the result string using the pipe - Return the result string |
+| string char_to_str(char c)   | - Convert character to string - Return the converted string |
 
-4. The results will be saved in the "RecognitionOutput" directory.
+## Parallelism Decomposition
 
-## How it Works
+[Image: Parallelism Decomposition]
 
-1. The system uses the Viola-Jones object detection framework to detect potential number plates in the images.
+## Program Flow
 
-2. Detected plates are processed, and regions of interest (ROIs) are selected based on certain criteria, such as size and position.
+[Image: Program Flow]
 
-3. These ROIs are passed to the character recognition function, which extracts characters and sends them to a neural network for recognition. The neural network is executed as a system command using Python. See [Python Neural Network for Character Recognition](#neural-network-for-character-recognition).
+## Usage Instructions
 
-4. The recognized characters are labeled on the image, and rectangles are drawn around them.
+### Step 1 - Install OpenCV
 
-5. The processed images are saved in the "RecognitionOutput" directory.
+1. Go to [OpenCV Releases](https://github.com/opencv/opencv/releases) and download the Latest Release's EXE File.
+2. Create a folder ‘OpenCV’ in the C drive.
+3. Run the downloaded .exe file and select the extraction location as the folder you just created.
+4. Add the bin folder (C:\OpenCV\opencv\build\x64\vc15\bin) to the Environment Variables path.
+5. Restart your computer.
 
-## Performance
+### Step 2 - Install Python
 
-The system's performance is significantly improved through parallelization using OpenMP. The program's execution time is significantly reduced compared to a serial implementation.
+1. Download the installer from [Python Downloads for Windows](https://www.python.org/downloads/windows/).
+2. Run the installer and follow the setup steps.
+3. Make sure the 'Add Python to Path' option is checked during the setup process.
+4. Verify the Python installation by running "python -V" in the command line.
 
-- Parallel Execution Time: 18.1869 seconds
+### Step 3 – Set Up Project
+
+1. Clone the project from [GitHub](https://github.com/mmaarij/Parallelized-Number-Plate-Detection-System-using-OpenCV-OpenMP).
+2. Run the Visual Studio Solution (.sln) file.
+3. Verify that OpenCV is added to the project properties.
+   - Go to Project > Properties.
+   - In VC++ Directories > Build Directories, add “C:\OpenCV\opencv\build\include”.
+   - In VC++ Directories > Library Directories, add “C:\OpenCV\opencv\build\x64\vc15\lib”.
+   - In Linker > Input > Additional Dependencies, add “opencv_world455d.lib”.
+4. Enable OpenMP in Visual Studio by going to Project > Properties > C/C++ > Language > OpenMP Support and enabling it to "Yes".
+5. Rename a batch of images to be detected in the form "plate (1)", "plate (2)", and so on.
+6. Go to [Bulk Resize Photos](https://bulkresizephotos.com/en) and bulk resize all images to 960 x 540.
+7. In the project directory, navigate to Resources > Plates > test and paste all the renamed/resized images.
+
+### Step 4 – Run the Program
+
+1. Enter the number of images in the test directory.
+2. The output will be stored inside the "RecognitionOutput" folder in the project directory.
+
+## Results
+
+The test was run on a batch of 10 images, containing 11 number plates. The entire batch was processed for 100 iterations, and the results were averaged out in the end.
+
+For one single batch, the average time was as follows:
+
 - Serial Execution Time: 57.0827 seconds
+- Parallel Execution Time: 18.1869 seconds
 
-This project is designed for optimal speed and efficiency in plate detection and character recognition.
+The parallelized implementation resulted in a speedup of approximately 313.86%.
 
-## Neural Network for Character Recognition
+## Python Neural Network for Character Recognition
 
-Character recognition in this project is performed using a Python neural network script. The script is provided in the neuralnet.py file. It uses a Perceptron model for character recognition.
+Character recognition in this project is performed using a Python neural network script. The script uses a Perceptron model for character recognition.
 
 The Python script reads a saved neural network object from the "Plates_NN.pickle" file, which contains the trained model's weights and biases. It then processes the input image and returns a prediction for the recognized character.
 
 Here is an overview of the neuralnet.py script:
-
 ```python
 import numpy as np
 import pandas as pd
@@ -144,6 +184,7 @@ def main(imgArray):
 
 main(list(map(float, sys.argv[1:])))
 ```
+
 
 ## License
 
