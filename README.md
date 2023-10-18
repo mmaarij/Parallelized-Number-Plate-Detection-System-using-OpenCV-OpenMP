@@ -10,6 +10,7 @@ This project is a Parallelized Number Plate Detection System developed for Windo
 - [Usage](#usage)
 - [How it Works](#how-it-works)
 - [Performance](#performance)
+- [Python Neural Network for Character Recognition](#neural-network-for-character-recognition)
 - [License](#license)
 
 ## Introduction
@@ -57,7 +58,7 @@ To get started with this project, follow these steps:
 
 2. Detected plates are processed, and regions of interest (ROIs) are selected based on certain criteria, such as size and position.
 
-3. These ROIs are passed to the character recognition function, which extracts characters and sends them to a neural network for recognition. The neural network is executed as a system command using Python.
+3. These ROIs are passed to the character recognition function, which extracts characters and sends them to a neural network for recognition. The neural network is executed as a system command using Python. See [Python Neural Network for Character Recognition](#neural-network-for-character-recognition).
 
 4. The recognized characters are labeled on the image, and rectangles are drawn around them.
 
