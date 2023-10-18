@@ -173,10 +173,10 @@ To ensure the program runs efficiently and provides significant speedups compare
 
 
 ## Parallelism Decomposition
-![Parallelism Decomposition](Resources/Parallelism Decomposition.jpg)
+![Parallelism Decomposition](Resources/Parallelism%20Decomposition.jpg)
 
 ## Program Flow
-![Program Flow](Resources/Program Flow.jpg)
+![Program Flow](Resources/Program%20Flow.jpg)
 
 ## Usage Instructions
 
