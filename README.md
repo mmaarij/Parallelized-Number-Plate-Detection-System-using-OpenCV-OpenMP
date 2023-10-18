@@ -11,7 +11,6 @@ This project is a Parallelized Number Plate Detection System developed for Windo
 - [How it Works](#how-it-works)
 - [Performance](#performance)
 - [License](#license)
-- [Contributing](#contributing)
 
 ## Introduction
 
@@ -72,6 +71,78 @@ The system's performance is significantly improved through parallelization using
 - Serial Execution Time: 57.0827 seconds
 
 This project is designed for optimal speed and efficiency in plate detection and character recognition.
+
+## Neural Network for Character Recognition
+
+Character recognition in this project is performed using a Python neural network script. The script is provided in the neuralnet.py file. It uses a Perceptron model for character recognition.
+
+The Python script reads a saved neural network object from the "Plates_NN.pickle" file, which contains the trained model's weights and biases. It then processes the input image and returns a prediction for the recognized character.
+
+Here is an overview of the neuralnet.py script:
+
+```python
+import numpy as np
+import pandas as pd
+import pickle
+import sys
+
+class Perceptron:
+  all_weights = []
+  all_bias = []
+
+  def __init__(self, weights, bias):
+    self.all_weights = weights
+    self.all_bias = bias
+
+# Functions for weighted sum, sigmoid, and prediction
+
+def get_weighted_sum(feature, weights, bias):
+  # Calculate the weighted sum of features
+  wSum = float(0.0)
+  for i in range(len(feature)):
+    wSum += float(feature[i] * weights[i])
+
+  wSum += float(bias)
+  return wSum
+
+def sigmoid(w_sum):
+  # Apply sigmoid activation function
+  sig = 1 / (1 + np.exp(-w_sum))
+  return sig
+
+def get_prediction(image, weights, bias):
+  # Get the prediction for the input image
+  w_sum = get_weighted_sum(image, weights, bias)
+  prediction = sigmoid(w_sum)
+  return prediction
+
+def main(imgArray):
+  # Load the trained neural network from a file
+  file_to_read = open("Plates_NN.pickle", "rb")
+  loaded_object = pickle.load(file_to_read)
+  file_to_read.close()
+
+  image = np.array(imgArray) / 255
+
+  predictions_set = []
+  listOfLabels = ['A', 'B', 'C', ...]  # List of possible characters
+
+  # Get predictions for all characters
+  for j in range(36):
+    prediction = get_prediction(image, loaded_object.all_weights[j], loaded_object.all_bias[j])
+    temp_tup = (listOfLabels[j], prediction)
+    predictions_set.append(temp_tup)
+
+  df = pd.DataFrame.from_records(predictions_set, columns=['Character', 'Prediction'])
+  df['Prediction'] = df['Prediction'].astype(float).round(6)
+  df.sort values(by=['Prediction'], inplace=True, ascending=False)
+
+  # Get the character with the highest prediction
+  topPrediction = str(df.iloc[0][0])
+  print(topPrediction)
+
+main(list(map(float, sys.argv[1:])))
+```
 
 ## License
 
