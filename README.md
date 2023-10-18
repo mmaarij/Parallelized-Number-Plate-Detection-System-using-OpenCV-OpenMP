@@ -186,7 +186,8 @@ To ensure the program runs efficiently and provides significant speedups compare
 2. Create a folder ‘OpenCV’ in the C drive.
 3. Run the downloaded .exe file and select the extraction location as the folder you just created.
 4. Add the bin folder (C:\OpenCV\opencv\build\x64\vc15\bin) to the Environment Variables path.
-5. Restart your computer.
+   ![Environment Variables Setup](Resources/Environment%20Variables.png)
+6. Restart your computer.
 
 ### Step 2 - Install Python
 
