@@ -45,19 +45,132 @@ To ensure the program runs efficiently and provides significant speedups compare
 - Python (Used to create and train the Neural Net, and invoked to recognize characters using the pre-trained Neural Net)
 
 ## Function Definitions
+<table>
+  <tr>
+    <th>Function Name</th>
+    <th>Use</th>
+  </tr>
+  <tr>
+    <td>void main()</td>
+    <td>
+      <ul>
+        <li>Load images using a for loop</li>
+        <li>(Parallelized) For Each Image:
+          <ul>
+            <li>Load Harr-Cascade Number-Plate Classifier.</li>
+            <li>Apply Median Blur to image</li>
+            <li>Convert to Grayscale</li>
+            <li>Use Viola-Jones Cascade Method (built into OpenCV) to detect all plates within the current frame</li>
+            <li>Call processPlatesArray() function</li>
+          </ul>
+        </li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>void processPlatesArray(Mat& frame, Mat& grey, vector <Rect>& plates)</td>
+    <td>
+      <ul>
+        <li>Process all plates in an image using a for loop</li>
+        <li>(Parallelized) For each plate:
+          <ul>
+            <li>Call processSinglePlate() function</li>
+          </ul>
+        </li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>void processSinglePlate(Mat& croppedPlate)</td>
+    <td>
+      <ul>
+        <li>Preprocess cropped plate:
+          <ul>
+            <li>Apply Binary Thresholding</li>
+            <li>Apply Median Blur</li>
+            <li>Erode the lines in the image</li>
+            <li>Dilate the lines in the image</li>
+            <li>Apply Inverse Binary Thresholding</li>
+            <li>Apply Canny Edge Detection</li>
+          </ul>
+        </li>
+        <li>Use the built-in OpenCV findContours() function to find all contours in the image</li>
+        <li>Call sortContours() function</li>
+        <li>Process all contours in the image using a for loop</li>
+        <li>For each contour:
+          <ul>
+            <li>Select a bounding rectangle around the contour as the region of interest (ROI)</li>
+            <li>If ROI is of acceptable parameters and does not overlap with the previous ROI, add the contour to the selected ROI list</li>
+          </ul>
+        </li>
+        <li>Call postProcessImg() function</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>void postProcessImg(Mat& dilatedImg, vector <vector <Point>> contours, vector <int> selected_ROI)</td>
+    <td>
+      <ul>
+        <li>Convert a copy of the image from grayscale to RGB.</li>
+        <li>(Parallelized) For each character/contour:
+          <ul>
+            <li>Crop the character out of the grayscale image</li>
+            <li>Call recognizeCharacter() function on the cropped character and get the return value</li>
+            <li>Add the recognized character to the output string (recognized license plate number)</li>
+            <li>Draw a bounding rectangle around the character on the colored image copy</li>
+            <li>Label the character with recognized text on the colored image copy</li>
+            <li>Save the processed image in the output directory with a filename set to the output string</li>
+          </ul>
+        </li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>string recognizeCharacter(Mat& croppedCharacter)</td>
+    <td>
+      <ul>
+        <li>Preprocess cropped character:
+          <ul>
+            <li>Dilate lines</li>
+            <li>Add a padded border</li>
+            <li>Resize the image to 28x28 pixels</li>
+          </ul>
+        </li>
+        <li>Parse a Python command as a string to be run as a system command in the form "python neuralnet.py p1 p2 p3 …... p784" where pN denotes pixel values to be passed as arguments to the Python script</li>
+        <li>Call execSystemCommand() function with the parsed command as a parameter to run the Python script and send the cropped character image to the neural net for recognition</li>
+        <li>Return the recognized character obtained as output from the neural net</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>void sortContours(vector <vector <Point>>& contours)</td>
+    <td>
+      <ul>
+        <li>Sort contours based on x coordinates from left to right using insertion sort</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>string execSystemCommand(const char* cmd)</td>
+    <td>
+      <ul>
+        <li>Create a pipe</li>
+        <li>Execute a system command and store the output in a result string using the pipe</li>
+        <li>Return the result string</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td>string char_to_str(char c)</td>
+    <td>
+      <ul>
+        <li>Convert a character to a string</li>
+        <li>Return the converted string</li>
+      </ul>
+    </td>
+  </tr>
+</table>
 
-| Function Name               | Use                                                       |
-| --------------------------- | --------------------------------------------------------- |
-| void main()                 | - Load images using a for loop <br/>- Load Harr-Cascade Number-Plate Classifier. <br/>- Apply Median Blur to image <br/>- Convert to Grayscale <br/>- Use Viola-Jones Cascade Method (built into OpenCV) to detect all plates within the current frame <br/>- Call processPlatesArray() function |
-| void processPlatesArray(Mat& frame, Mat& grey, vector <Rect>& plates) | - Process all plates in an image using a for loop - For each plate, call processSinglePlate() function |
-| void processSinglePlate(Mat& croppedPlate) | - Preprocess cropped plate: - Apply Binary Thresholding - Apply Median Blur - Erode the lines in the image - Dilate the lines in the image - Apply Inverse Binary Thresholding - Apply Canny Edge Detection - Use the built-in OpenCV findContours() function to find all contours in the image - Call sortContours() function - Process all contours in the image using a for loop - For each contour: - Select a bounding rectangle around the contour as the region of interest (ROI) - If the ROI meets acceptable parameters and does not overlap with the previous ROI, add the contour to the selected ROI list - Call postProcessImg() function |
-| void postProcessImg(Mat& dilatedImg, vector <vector <Point>> contours, vector <int> selected_ROI) | - Convert a copy of the image from grayscale to RGB - For each character/contour: - Crop the character out of the grayscale image - Call recognizeCharacter() function on the cropped character and get the return value - Add the recognized character to the output string (recognized license plate number) - Draw a bounding rectangle around the character on the colored image copy - Label the character with recognized text on the colored image copy - Save the processed image in the output directory with the filename set to the output string |
-| string recognizeCharacter(Mat& croppedCharacter) | - Preprocess cropped character: - Dilate lines - Add a padded border - Resize the image to 28x28 pixels - Parse a python command as a string to be run as a system command in the form "python neuralnet.py p1 p2 p3 … p784" where pN denotes pixel values to be passed as arguments to the python script - Call execSystemCommand() function with the parsed command as a parameter to run the python script and send the cropped character image to the neural net for recognition - Return the recognized character obtained as output from the neural net |
-| void sortContours(vector <vector <Point>>& contours) | - Sort contours based on x coordinates from left to right using insertion sort |
-| string execSystemCommand(const char* cmd) | - Create a pipe - Execute a system command and store output
-
- in the result string using the pipe - Return the result string |
-| string char_to_str(char c)   | - Convert character to string - Return the converted string |
 
 ## Parallelism Decomposition
 
